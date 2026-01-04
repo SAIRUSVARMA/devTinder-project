@@ -5,32 +5,31 @@ const dotenv = require("dotenv");
 const cors = require("cors");
 const helmet = require("helmet");
 
-dotenv.config(); // load .env
+dotenv.config();
 const app = express();
 
-// Use NODE_ENV and PORT from .env or defaults
 const NODE_ENV = process.env.NODE_ENV || "development";
 const PORT = process.env.PORT || 5000;
 
-// ✅ Middleware: CORS
-// Allow frontend origin in dev, or your deployed frontend in prod
-const FRONTEND_ORIGIN =
-  NODE_ENV === "development"
-    ? "http://localhost:5173" // Vite frontend
-    : "https://your-production-frontend.com";
-
+// --------------------
+// ⭐ CORS CONFIG
+// --------------------
 app.use(
   cors({
-    origin: FRONTEND_ORIGIN,
+    origin: process.env.CLIENT_URL, // <-- IMPORTANT
     credentials: true,
   })
 );
 
-// ✅ Middleware: JSON and cookies
+// --------------------
+// ⭐ JSON + Cookies
+// --------------------
 app.use(express.json());
 app.use(cookieParser());
 
-// ✅ Helmet CSP
+// --------------------
+// ⭐ SECURITY (HELMET)
+// --------------------
 if (NODE_ENV === "development") {
   app.use(
     helmet.contentSecurityPolicy({
@@ -38,26 +37,22 @@ if (NODE_ENV === "development") {
         defaultSrc: ["'self'"],
         connectSrc: [
           "'self'",
-          "http://localhost:5000", // backend API
-          "http://127.0.0.1:5000", // fallback for local dev
-          "http://localhost:5173", // frontend dev
-          "ws://localhost:5173", // Vite HMR WebSocket
+          process.env.CLIENT_URL || "http://localhost:5173",
+          "ws://localhost:5173",
+          "http://localhost:5000",
         ],
-        scriptSrc: ["'self'", "'unsafe-inline'", "blob:"], // ✅ allow Vite injected scripts
+        scriptSrc: ["'self'", "'unsafe-inline'", "blob:"],
         styleSrc: ["'self'", "'unsafe-inline'"],
         imgSrc: ["'self'", "data:", "blob:"],
       },
     })
   );
 } else {
-  // Production: stricter CSP
-  const BACKEND_PROD = "https://your-production-backend.com"; // replace with your deployed backend
-  const FRONTEND_PROD = "https://your-production-frontend.com"; // replace with deployed frontend
   app.use(
     helmet.contentSecurityPolicy({
       directives: {
         defaultSrc: ["'self'"],
-        connectSrc: [BACKEND_PROD, FRONTEND_PROD],
+        connectSrc: [process.env.CLIENT_URL, process.env.BACKEND_URL],
         scriptSrc: ["'self'"],
         styleSrc: ["'self'"],
         imgSrc: ["'self'", "data:"],
@@ -66,13 +61,17 @@ if (NODE_ENV === "development") {
   );
 }
 
-// ✅ Routes
+// --------------------
+// ⭐ ROUTES
+// --------------------
 app.use("/", require("./src/routes/auth"));
 app.use("/", require("./src/routes/profile"));
 app.use("/", require("./src/routes/request"));
 app.use("/", require("./src/routes/user"));
 
-// ✅ Database connect and start server
+// --------------------
+// ⭐ START SERVER AFTER DB
+// --------------------
 connectDB()
   .then(() => {
     app.listen(PORT, () => {
