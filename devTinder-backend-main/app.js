@@ -10,10 +10,20 @@ const app = express();
 
 const PORT = process.env.PORT || 5000;
 
-// ⭐ CORS — MUST BE THIS
+// ⭐ CORS — allow local + prod
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://devtinder-project-2.onrender.com",
+];
+
 app.use(
   cors({
-    origin: "https://devtinder-project-2.onrender.com",
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
   })
 );
@@ -22,7 +32,7 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
-// ⭐ Helmet (simplified so it won't block)
+// ⭐ Helmet
 app.use(
   helmet({
     contentSecurityPolicy: false,
