@@ -8,88 +8,33 @@ const helmet = require("helmet");
 dotenv.config();
 const app = express();
 
-const NODE_ENV = process.env.NODE_ENV || "development";
 const PORT = process.env.PORT || 5000;
 
-// --------------------
-// ⭐ CORS CONFIG
-// --------------------
-const allowedOrigins = [
-  "http://localhost:5173", // local dev
-  process.env.CLIENT_URL, // production frontend
-];
-
+// ⭐ CORS — MUST BE THIS
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // allow tools like Postman (no origin)
-      if (!origin) return callback(null, true);
-
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-
-      return callback(new Error("Not allowed by CORS"));
-    },
+    origin: "https://devtinder-project-2.onrender.com",
     credentials: true,
   })
 );
 
-// --------------------
-// ⭐ JSON + Cookies
-// --------------------
+// ⭐ JSON + cookies
 app.use(express.json());
 app.use(cookieParser());
 
-// --------------------
-// ⭐ SECURITY (HELMET)
-// --------------------
-if (NODE_ENV === "development") {
-  app.use(
-    helmet.contentSecurityPolicy({
-      directives: {
-        defaultSrc: ["'self'"],
-        connectSrc: [
-          "'self'",
-          process.env.CLIENT_URL || "http://localhost:5173",
-          "ws://localhost:5173",
-          "http://localhost:5000",
-        ],
-        scriptSrc: ["'self'", "'unsafe-inline'", "blob:"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        imgSrc: ["'self'", "data:", "blob:"],
-      },
-    })
-  );
-} else {
-  app.use(
-    helmet.contentSecurityPolicy({
-      directives: {
-        defaultSrc: ["'self'"],
-        connectSrc: [process.env.CLIENT_URL, process.env.BACKEND_URL],
-        scriptSrc: ["'self'"],
-        styleSrc: ["'self'"],
-        imgSrc: ["'self'", "data:"],
-      },
-    })
-  );
-}
+// ⭐ Helmet (simplified so it won't block)
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+  })
+);
 
-// --------------------
-// ⭐ ROUTES
-// --------------------
+// ⭐ Routes
 app.use("/", require("./src/routes/auth"));
 app.use("/", require("./src/routes/profile"));
 app.use("/", require("./src/routes/request"));
 app.use("/", require("./src/routes/user"));
 
-// --------------------
-// ⭐ START SERVER AFTER DB
-// --------------------
-connectDB()
-  .then(() => {
-    app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT} in ${NODE_ENV} mode`);
-    });
-  })
-  .catch((err) => console.log("DB connection failed:", err));
+connectDB().then(() => {
+  app.listen(PORT, () => console.log(`Server started on ${PORT}`));
+});

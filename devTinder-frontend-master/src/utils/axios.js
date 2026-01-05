@@ -3,8 +3,7 @@ import { BASE_URL } from "./constants";
 
 // Create a single axios instance
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
-  baseURL: BASE_URL, // automatically uses dev or prod URL
+  baseURL: "https://devtinder-project-1.onrender.com",
   withCredentials: true, // sends cookies automatically
 });
 
