@@ -1,10 +1,12 @@
 import axios from "axios";
-import { BASE_URL } from "./constants";
 
-// Create a single axios instance
+// Single axios instance for the whole app
 const api = axios.create({
-  baseURL: "https://devtinder-project-1.onrender.com",
-  withCredentials: true, // sends cookies automatically
+  baseURL:
+    import.meta.env.MODE === "development"
+      ? "http://localhost:5000" // local backend
+      : "/", // SAME DOMAIN in production
+  withCredentials: true, // send cookies
 });
 
 export default api;

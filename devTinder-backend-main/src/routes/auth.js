@@ -20,7 +20,7 @@ const sendToken = (user, res) => {
   res.cookie("token", token, {
     httpOnly: true,
     secure: true, // ALWAYS true in Render (HTTPS)
-    sameSite: "none", // REQUIRED for cross-site cookies
+    sameSite: "lax", // REQUIRED for cross-site cookies
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 
